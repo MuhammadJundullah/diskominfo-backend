@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\postsController;
+use GuzzleHttp\Client;
 
 Route::post('/login', [postsController::class, 'login']);
 
@@ -30,5 +31,22 @@ Route::post('/delete-informasipublik/{id?}', [postsController::class, 'delete_in
 Route::post('/delete-staff/{id?}', [postsController::class, 'delete_staff']);
 
 Route::post('/tambah-staff', [postsController::class, 'tambahstaff']);
+
+Route::post('/proxy', function (Request $request) {
+    $client = new Client();
+
+    try {
+        $response = $client->request('POST', $request->url, [
+            'headers' => $request->headers->all(),
+            'form_params' => $request->all(), // Jika ingin meneruskan data
+            'timeout' => 10,
+        ]);
+
+        return response($response->getBody(), $response->getStatusCode())
+            ->header('Content-Type', $response->getHeader('Content-Type')[0] ?? 'application/json');
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
 
 
